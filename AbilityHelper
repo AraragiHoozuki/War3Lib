@@ -1,0 +1,136 @@
+library helper initializer init uses save
+
+globals
+    integer caster
+    group ng
+    unit zerofield
+    private location uloc = Location(0,0)
+endglobals
+
+function GroupFilter takes group g, unit u, boolean alive, boolean enemy, boolean edi returns nothing
+    local unit v
+    local group gd=CreateGroup()
+    call GroupAddGroup(g,gd)
+    loop
+        set v=FirstOfGroup(gd)
+        exitwhen v==null
+        call GroupRemoveUnit(gd,v)
+        if (GetUnitState(v,UNIT_STATE_LIFE)>=0.415)==alive and IsUnitEnemy(v,GetOwningPlayer(u))==enemy and IsUnitType(v, UNIT_TYPE_STRUCTURE)==edi then
+        else
+          call GroupRemoveUnit(g,v)
+        endif
+    endloop
+    call DestroyGroup(gd)
+    set v=null
+    set gd=null
+endfunction
+
+//========================================================================================================
+
+function GetUnitsInLine takes real x0,real y0,real ang,real length,real wide returns group
+    local group g
+    local location origin=Location(x0,y0)
+    local unit u
+    local real ang0
+    local real angnew
+    local real dis
+    set g=GetUnitsInRangeOfLocAll(length+wide,origin)
+    set ng=CreateGroup()
+    loop
+        set u=FirstOfGroup(g)
+        exitwhen u==null
+        call GroupRemoveUnit(g,u)
+        call MoveLocation(uloc,GetUnitX(u),GetUnitY(u))
+        set ang0=AngleBetweenPoints(origin,uloc)
+        set dis=DistanceBetweenPoints(origin,uloc)
+        set angnew=ang0-ang
+        call MoveLocation(uloc,x0+dis*Cos(angnew*bj_PI/180),y0+dis*Sin(angnew*bj_PI/180))
+        if GetLocationX(uloc)<=x0+length /*
+          */and GetLocationX(uloc)>=x0 /*
+          */and GetLocationY(uloc)<=y0+wide/2 /*
+          */and GetLocationY(uloc)>= y0-wide/2 then
+          call GroupAddUnit(ng,u)
+        endif
+    endloop
+    call DestroyGroup(g)
+    call RemoveLocation(origin)
+    set origin=null
+    set u=null
+    set g=null
+    return ng
+endfunction
+
+//UnitGroupDamage with Effect, type optional
+function UGDEAD takes unit dmger,group tgt, real amount,string s,attacktype AT,damagetype DT returns nothing
+    local group g=CreateGroup()
+    local unit w
+    call GroupAddGroup(tgt,g)
+    loop
+        set w=FirstOfGroup(g)
+        exitwhen w==null
+        call GroupRemoveUnit(g,w)
+        call UnitDamageTarget(dmger,w,amount, false, false, AT, DT, WEAPON_TYPE_WHOKNOWS )
+        call DestroyEffect(AddSpecialEffectTargetUnitBJ( "chest",w, s ))
+    endloop
+    call DestroyGroup(g)
+    set g=null
+    set w=null
+endfunction
+
+//UnitSpellGroupEnemy
+function USGE takes unit speller,group tgt,integer abicode,integer lvl,string s returns nothing
+    local unit u
+    local unit w
+    loop
+        set w=FirstOfGroup(tgt)
+        exitwhen w==null
+        call GroupRemoveUnit(tgt,w)
+        if IsUnitEnemy(w,GetOwningPlayer(speller))==true then
+           set u=CreateUnit(GetOwningPlayer(speller),'h000',GetUnitX(w),GetUnitY(w),0)
+           call ShowUnitHide(u)
+           call UnitAddAbility(u,abicode)
+           call SetUnitAbilityLevel(u,abicode,lvl)
+           call IssueTargetOrder(u,s,w)
+        endif
+    endloop
+    set u=null
+    set w=null
+endfunction
+
+//UnitSpellUnit
+function USU takes unit speller, unit tgt, integer abicode, integer lvl,string s returns nothing
+    local unit u=CreateUnit(GetOwningPlayer(speller),'h000',GetUnitX(tgt),GetUnitY(tgt),0)
+    call UnitApplyTimedLife(u, 'BHwe', 1)
+    call ShowUnitHide(u)
+    call UnitAddAbility(u,abicode)
+    call SetUnitAbilityLevel(u,abicode,lvl)
+    call IssueTargetOrder(u,s,tgt)
+    set u=null
+endfunction
+
+function USUID takes unit speller, unit tgt, integer abicode, integer lvl,integer id returns nothing
+    local unit u=CreateUnit(GetOwningPlayer(speller),'h000',GetUnitX(tgt),GetUnitY(tgt),YDWEAngleBetweenUnits(speller,tgt))
+    call UnitApplyTimedLife(u, 'BHwe', 3)
+    call ShowUnitHide(u)
+    call UnitAddAbility(u,abicode)
+    call SetUnitAbilityLevel(u,abicode,lvl)
+    call IssueTargetOrderById(u,id,tgt)
+    set u=null
+endfunction
+
+//UnitAddHP
+function UAHP takes unit u, real amt returns nothing
+    call SetUnitState(u,UNIT_STATE_LIFE,GetUnitState(u,UNIT_STATE_LIFE)+amt)
+endfunction
+
+//UnitAddMP
+function UAMP takes unit u, real amt returns nothing
+    call SetUnitState(u,UNIT_STATE_MANA,GetUnitState(u,UNIT_STATE_MANA)+amt)
+endfunction
+
+//========================================================================================================
+function init takes nothing returns nothing
+    set caster='h000'
+endfunction
+
+endlibrary
