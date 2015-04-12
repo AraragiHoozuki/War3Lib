@@ -1,0 +1,20 @@
+//0秒无敌免疫伤害
+library indamage uses save
+function IndamageAct takes nothing returns nothing
+    local timer t=GetExpiredTimer()
+    local unit u=GUbyS(TID(t),"invul")
+    call SetUnitInvulnerable(u,false)
+    call FMS(TID(t))
+    call DestroyTimer(t)
+    set t=null
+    set u=null
+endfunction
+
+function Indamage takes unit u returns nothing
+    local timer t=CreateTimer()
+    call SetUnitInvulnerable(u,true)
+    call SUbyS(TID(t),"invul",u)
+    call TimerStart(t,0,false,function IndamageAct)
+    set t=null
+endfunction
+endlibrary
