@@ -1,0 +1,56 @@
+library save
+function TID takes timer t returns string
+    return I2S(YDWEGetTimerID(t))
+endfunction
+
+function UID takes unit u returns string
+    return I2S(YDWEGetUnitID(u))
+endfunction
+
+function TrID takes trigger trg returns string
+    return I2S(YDWEGetTriggerID(trg))
+endfunction
+
+
+//! textmacro Save takes NAME, TYPE, TYPE2
+function S$NAME$byS takes string s1, string s2, $TYPE$ i returns nothing
+    call YDWESave$TYPE2$ByString( s1, s2, i )
+endfunction
+//! endtextmacro
+
+//! runtextmacro Save("U","unit","Unit")
+//! runtextmacro Save("L","location","Location")
+//! runtextmacro Save("R","real","Real")
+//! runtextmacro Save("I","integer","Integer")
+//! runtextmacro Save("Tr","trigger","Trigger")
+//! runtextmacro Save("Ti","timer","Timer")
+//! runtextmacro Save("S","string","String")
+//! runtextmacro Save("G","group","Group")
+//! runtextmacro Save("E","effect","Effect")
+//! runtextmacro Save("Li","lightning","Lightning")
+
+
+
+
+//! textmacro Get takes NAME, TYPE, TYPE2
+function G$NAME$byS takes string s1, string s2 returns $TYPE$
+    return YDWEGet$TYPE2$ByString( s1, s2 )
+endfunction
+//! endtextmacro
+
+//! runtextmacro Get("U","unit","Unit")
+//! runtextmacro Get("L","location","Location")
+//! runtextmacro Get("R","real","Real")
+//! runtextmacro Get("I","integer","Integer")
+//! runtextmacro Get("Tr","trigger","Trigger")
+//! runtextmacro Get("Ti","timer","Timer")
+//! runtextmacro Get("S","string","String")
+//! runtextmacro Get("G","group","Group")
+//! runtextmacro Get("E","effect","Effect")
+//! runtextmacro Get("Li","lightning","Lightning")
+
+
+function FMS takes string s returns nothing
+    call YDWEFlushMissionByString(s)
+endfunction
+endlibrary
