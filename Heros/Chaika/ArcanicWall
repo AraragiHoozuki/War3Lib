@@ -1,0 +1,57 @@
+function Trig_MurusArcanicumConditions takes nothing returns boolean
+    return ((GetSpellAbilityId() == 'A021'))
+endfunction
+
+function Trig_MurusArcanicumActions takes nothing returns nothing
+    local unit u=GetTriggerUnit()
+    local real ang=Atan2(GRbyS(UID(u),"tlocy")-GetUnitY(u),GRbyS(UID(u),"tlocx")-GetUnitX(u))
+    local destructable array desA
+    local destructable array desB
+    local integer i=0
+    local real x1=GetUnitX(u)-120*Sin(ang)
+    local real y1=GetUnitY(u)+120*Cos(ang)
+    local real x2=GetUnitX(u)+120*Sin(ang)
+    local real y2=GetUnitY(u)-120*Cos(ang)
+    local group g
+    local real range
+    if GetUnitTypeId(u) == 'H00F' then
+      set range=2400
+      else
+        set range=1500
+    endif                               //判断是否为匍匐模式
+    set g=GetUnitsInLine(GetUnitX(u), GetUnitY(u), ang*180/bj_PI, range, 200)
+    call USGE(u,g,'A022',GetUnitAbilityLevel(u,'A021'),"faeriefire")
+    loop
+        set i=i+1
+        set desA[i]=CreateDestructable('B000',x1,y1,90+ang*180/bj_PI,1,0)
+        set desB[i]=CreateDestructable('B000',x2,y2,90+ang*180/bj_PI,1,0) //需要事先设定路径阻断器
+        set x1=x1+80*Cos(ang)
+        set y1=y1+80*Sin(ang)
+        set x2=x2+80*Cos(ang)
+        set y2=y2+80*Sin(ang)
+        exitwhen i*80>=range
+    endloop
+    call TriggerSleepAction(I2R(GetUnitAbilityLevel(u,'A021'))*2+1)
+    loop
+        call RemoveDestructable(desA[i])
+        call RemoveDestructable(desB[i])
+        set desA[i]=null
+        set desB[i]=null
+        set i=i-1
+        exitwhen i==0
+    endloop
+    call DestroyGroup(g)
+    set g=null
+    set u=null
+endfunction
+
+//===========================================================================
+function InitTrig_MurusArcanicum takes nothing returns nothing
+    set gg_trg_MurusArcanicum = CreateTrigger()
+#ifdef DEBUG
+    call YDWESaveTriggerName(gg_trg_MurusArcanicum, "MurusArcanicum")
+#endif
+    call TriggerRegisterAnyUnitEventBJ( gg_trg_MurusArcanicum, EVENT_PLAYER_UNIT_SPELL_FINISH )
+    call TriggerAddCondition(gg_trg_MurusArcanicum, Condition(function Trig_MurusArcanicumConditions))
+    call TriggerAddAction(gg_trg_MurusArcanicum, function Trig_MurusArcanicumActions)
+endfunction
