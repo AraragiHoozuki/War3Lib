@@ -1,0 +1,83 @@
+//释放
+
+function Trig_ImpulsorReleaseConditions takes nothing returns boolean
+    return ((GetSpellAbilityId() == 'A01Z'))
+endfunction
+
+function Trig_ImpulsorReleaseActions takes nothing returns nothing
+    local unit u=GetTriggerUnit()
+    local unit bullet
+    local real time=GRbyS(UID(u),"time")
+    local string abi=GSbyS(UID(u),"ability")
+    local real ang=GRbyS(UID(u),"ang")
+    local timer t=CreateTimer()
+    local group g=CreateGroup()
+    local real lvl
+    local real dmg
+    local real dis
+    local real range 
+    if GetUnitTypeId(u) == 'H00F' then
+      set range=2400
+      else
+        set range=1500
+    endif                               //判断是否为匍匐模式
+    call UnitRemoveAbility(u,'A01Z')
+//================================================================================================================================================================
+    if abi == "impulsor" then  // 判断技能为 Impulsor
+      set lvl = I2R(GetUnitAbilityLevel(u,'A01X'))
+      set dmg = (lvl+1)*25*time + lvl*25 + 50 //计算伤害
+      set dis = (lvl+1)*25*time + 300 //计算击退距离
+      set bullet = CreateUnit(GetOwningPlayer(u), 'h00G' , GetUnitX(u)+120*Cos(ang), GetUnitY(u)+120*Sin(ang), GetUnitFacing(u)) //创建子弹
+      call SUbyS(TID(t),"u",u)
+      call SUbyS(TID(t),"bullet",bullet)
+      call SRbyS(TID(t),"dmg",dmg)
+      call SRbyS(TID(t),"dis", dis)
+      call SRbyS(TID(t),"ang",ang)
+      call SGbyS(TID(t),"g",g)
+      call SRbyS(TID(t),"range",range)
+      call TimerStart(t, 0.05, true, function ImpulsorEffect) //保存数据，开启计时器
+      call FMS(UID(u)) //清空单位储存
+    endif
+//=================================================================================================================================================================
+    if abi == "perfossor" then //判断技能为 Perfossor
+      set lvl = I2R(GetUnitAbilityLevel(u,'A020'))
+      set dmg = 100 + (20+30*lvl)*time //计算伤害
+      set dis = 75 + 5*lvl*time //计算宽度
+      set bullet = CreateUnit(GetOwningPlayer(u), 'h002' , GetUnitX(u)+120*Cos(ang), GetUnitY(u)+120*Sin(ang), GetUnitFacing(u))
+      set g=GetUnitsInLine(GetUnitX(u)+50*Cos(ang), GetUnitY(u)+50*Sin(ang), ang*180/bj_PI, range, dis)
+      call GroupFilter(g,u,true,true,false)
+      call UGDEAD(u,g,dmg,null,ATTACK_TYPE_HERO,DAMAGE_TYPE_MAGIC)
+      call DestroyGroup(g)
+      call KillUnit(bullet)
+    endif  
+//================================================================================================================================================================
+    if abi == "reaper" then  // 判断技能为 Reaper
+      set dmg = 200+300*time //计算伤害
+      set bullet = CreateUnit(GetOwningPlayer(u), 'h00H' , GetUnitX(u)+120*Cos(ang), GetUnitY(u)+120*Sin(ang), GetUnitFacing(u)) //创建子弹
+      call SUbyS(TID(t),"u",u)
+      call SUbyS(TID(t),"bullet",bullet)
+      call SRbyS(TID(t),"dmg",dmg)
+      call SRbyS(TID(t),"ang",ang)
+      call SGbyS(TID(t),"g",g)
+      call SRbyS(TID(t),"range",range)
+      call TimerStart(t, 0.05, true, function ReaperEffect) //保存数据，开启计时器
+      call FMS(UID(u)) //清空单位储存
+    endif
+//==================================================================================================================================================================
+    set abi=null
+    set u=null
+    set bullet=null
+    set g=null
+    set t=null
+endfunction
+
+//===========================================================================
+function InitTrig_ImpulsorRelease takes nothing returns nothing
+    set gg_trg_ImpulsorRelease = CreateTrigger()
+#ifdef DEBUG
+    call YDWESaveTriggerName(gg_trg_ImpulsorRelease, "ImpulsorRelease")
+#endif
+    call TriggerRegisterAnyUnitEventBJ( gg_trg_ImpulsorRelease, EVENT_PLAYER_UNIT_SPELL_FINISH )
+    call TriggerAddCondition(gg_trg_ImpulsorRelease, Condition(function Trig_ImpulsorReleaseConditions))
+    call TriggerAddAction(gg_trg_ImpulsorRelease, function Trig_ImpulsorReleaseActions)
+endfunction
