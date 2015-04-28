@@ -11,7 +11,7 @@ function ChaikaTargetLocActions takes nothing returns nothing
     local real x=GetSpellTargetX()
     local real y=GetSpellTargetY()
     call SRbyS(UID(u),"tlocx",x)
-    call SRbyS(UID(u),"tlocy",y)
+    call SRbyS(UID(u),"tlocy",y)  //绑定施法目标位置的座标
     set u=null
 endfunction
 
