@@ -1,5 +1,92 @@
-// 技能The Pusher 启动
+//技能ThePusher效果
+function ImpulsorKnockBack takes nothing returns nothing
+    local timer t=GetExpiredTimer()
+    local unit u=GUbyS(TID(t),"u")
+    local unit v=GUbyS(TID(t),"v")
+    local unit w
+    local real dmg=GRbyS(TID(t),"dmg")
+    local real dis=GRbyS(TID(t),"dis")
+    local real rdis=GRbyS(TID(t),"rdis")
+    local real ang = GRbyS(TID(t),"ang") //子弹方向
+    local real ang2 //击退方向
+    local group g=GGbyS(TID(t),"g")
+    local group alg=GGbyS(TID(t),"alg")
+    call SetUnitX(v, GetUnitX(v)+30*Cos(ang))
+    call SetUnitY(v, GetUnitY(v)+30*Sin(ang))
+    call DestroyEffect( AddSpecialEffectTarget("Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl", v,"origin") )
+    call GroupEnumUnitsInRange(g, GetUnitX(v),GetUnitY(v),100,null)
+    call GroupRemoveGroup(alg,g)
+    call GroupFilter(g,u,true,true,false)
+    if CountUnitsInGroup(g)>0 then  //击中单位
+      set w=FirstOfGroup(g)
+      call GroupAddUnit(alg,w)
+      call UnitDamageTarget(u,w,dmg/2, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_MAGIC, WEAPON_TYPE_WHOKNOWS )
+      set ang2=YDWEAngleBetweenUnits(v,w)
+      call YDWETimerPatternRushSlide( w, ang2, dis/2, 0.50, 0.05, 0, false, false, false, "origin", "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl", "Abilities\\Weapons\\SeaElementalMissile\\SeaElementalMissile.mdl" )
+      call GroupClear(g)
+    endif
+    set rdis=rdis+30
+    call SRbyS(TID(t),"rdis",rdis)
+    if rdis>=dis then
+      call DestroyGroup(g)
+      call DestroyGroup(alg)
+      call FMS(TID(t))
+      call PauseTimer(t)
+      call DestroyTimer(t)
+    endif
+    set t=null
+    set u=null
+    set v=null
+    set w=null
+    set g=null
+    set alg=null
+endfunction
 
+function ImpulsorEffect takes nothing returns nothing
+    local timer t=GetExpiredTimer()
+    local unit u=GUbyS(TID(t),"u")
+    local unit bullet=GUbyS(TID(t),"bullet")
+    local unit v
+    local real dmg=GRbyS(TID(t),"dmg")
+    local real dis=GRbyS(TID(t),"dis")
+    local real ang=GRbyS(TID(t),"ang")
+    local group g=GGbyS(TID(t),"g")
+    local real range=GRbyS(TID(t),"range")
+    local real route=GRbyS(TID(t),"route") //读取数据
+    call SetUnitX(bullet, GetUnitX(bullet)+120*Cos(ang))
+    call SetUnitY(bullet, GetUnitY(bullet)+120*Sin(ang))
+    set route=route+120
+    call SRbyS(TID(t),"route",route)            //移动子弹
+    call GroupEnumUnitsInRange(g, GetUnitX(bullet),GetUnitY(bullet),75,null)
+    call GroupFilter(g,u,true,true,false)
+    if CountUnitsInGroup(g)>0 or route >= range then  //判定碰撞或射程
+      call FMS(TID(t))
+      call KillUnit(bullet)
+      call PauseTimer(t)
+      call DestroyTimer(t)
+      if CountUnitsInGroup(g)>0 then //判定碰撞
+        set v=FirstOfGroup(g)
+        call UnitDamageTarget(u,v,dmg, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_MAGIC, WEAPON_TYPE_WHOKNOWS )
+        set t=CreateTimer()//开启击退计时器
+        call SUbyS(TID(t),"u",u)
+        call SUbyS(TID(t),"v",v)
+        call SRbyS(TID(t),"dmg",dmg)
+        call SRbyS(TID(t),"dis", dis)
+        call SRbyS(TID(t),"ang",ang)
+        call SGbyS(TID(t),"g",g)
+        call SGbyS(TID(t),"alg", CreateGroup())
+        call TimerStart(t,0.05,true,function ImpulsorKnockBack)
+      endif
+      call GroupClear(g)
+    endif
+    set t=null
+    set u=null
+    set bullet=null
+    set v=null
+    set g=null
+endfunction
+
+// 技能The Pusher 启动
 function Trig_ImpulsorRechargingConditions takes nothing returns boolean
     return ((GetSpellAbilityId() == 'A01X'))
 endfunction
