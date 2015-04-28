@@ -1,5 +1,53 @@
-//TheReaper蓄力
+// TheReaper效果
+function ReaperEffect takes nothing returns nothing
+    local timer t=GetExpiredTimer()
+    local unit u=GUbyS(TID(t),"u")
+    local unit bullet=GUbyS(TID(t),"bullet")
+    local unit v
+    local real dmg=GRbyS(TID(t),"dmg")
+    local real ang=GRbyS(TID(t),"ang")
+    local group g=GGbyS(TID(t),"g")
+    local real range=GRbyS(TID(t),"range")
+    local real route=GRbyS(TID(t),"route") //读取数据
+    local integer i=0
+    call SetUnitX(bullet, GetUnitX(bullet)+120*Cos(ang))
+    call SetUnitY(bullet, GetUnitY(bullet)+120*Sin(ang))
+    set route=route+120
+    call SRbyS(TID(t),"route",route)            //移动子弹
+    call GroupEnumUnitsInRange(g, GetUnitX(bullet),GetUnitY(bullet),75,null)
+    call GroupFilter(g,u,true,true,false)
+    if CountUnitsInGroup(g)>0 or route >= range then  //判定碰撞或射程
+      call FMS(TID(t))
+      call KillUnit(bullet)
+      call PauseTimer(t)
+      call DestroyTimer(t)
+      if CountUnitsInGroup(g)>0 then
+        set v=FirstOfGroup(g)
+        call UnitDamageTarget(u,v,dmg, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_MAGIC, WEAPON_TYPE_WHOKNOWS )
+        loop
+            set i=i+1
+            set t=CreateTimer()
+            set bullet=CreateUnit(GetOwningPlayer(u), 'h00H' , GetUnitX(v)+100*Cos(ang), GetUnitY(v)+100*Sin(ang), (ang +Pow(-1, i+1)*bj_PI/6)*180/bj_PI )
+            call SUbyS(TID(t),"u",u)
+            call SUbyS(TID(t),"bullet",bullet)
+            call SRbyS(TID(t),"dmg",dmg*0.75)
+            call SRbyS(TID(t),"ang",ang +Pow(-1, i+1)*bj_PI/6)
+            call SGbyS(TID(t),"g",CreateGroup())
+            call SRbyS(TID(t),"range",range*0.75)
+            call TimerStart(t, 0.05, true, function ReaperEffect) //保存数据，开启计时器
+            exitwhen i==2
+        endloop
+        call GroupClear(g)
+      endif
+    endif
+    set t=null
+    set u=null
+    set bullet=null
+    set v=null
+    set g=null
+endfunction
 
+//TheReaper蓄力
 function Trig_TheReaperRechargingConditions takes nothing returns boolean
     return ((GetSpellAbilityId() == 'A023'))
 endfunction
