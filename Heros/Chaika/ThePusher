@@ -5,12 +5,12 @@ function ImpulsorKnockBack takes nothing returns nothing
     local unit v=GUbyS(TID(t),"v")
     local unit w
     local real dmg=GRbyS(TID(t),"dmg")
-    local real dis=GRbyS(TID(t),"dis")
-    local real rdis=GRbyS(TID(t),"rdis")
+    local real dis=GRbyS(TID(t),"dis") //最大击退距离
+    local real rdis=GRbyS(TID(t),"rdis") //已经击退距离
     local real ang = GRbyS(TID(t),"ang") //子弹方向
     local real ang2 //击退方向
     local group g=GGbyS(TID(t),"g")
-    local group alg=GGbyS(TID(t),"alg")
+    local group alg=GGbyS(TID(t),"alg")//储存已经被击中过的单位
     call SetUnitX(v, GetUnitX(v)+30*Cos(ang))
     call SetUnitY(v, GetUnitY(v)+30*Sin(ang))
     call DestroyEffect( AddSpecialEffectTarget("Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl", v,"origin") )
