@@ -1,0 +1,53 @@
+//TheReaper蓄力
+
+function Trig_TheReaperRechargingConditions takes nothing returns boolean
+    return ((GetSpellAbilityId() == 'A023'))
+endfunction
+
+function TheReaperTimer takes nothing returns nothing
+    local timer t=GetExpiredTimer()
+    local unit u=GUbyS(TID(t),"u")
+    local real r=GRbyS(TID(t),"r")
+    local real ang=GRbyS(TID(t),"ang")
+    if r<5 then
+      set r=r+0.1
+      call SRbyS(TID(t),"r",r)
+    endif
+    if  OrderId2String(GetUnitCurrentOrder(u)) != "channel" then //中断计时
+      if OrderId2String(GetUnitCurrentOrder(u)) == "roar" then //判断是否因为发动“释放”中断计时
+        call SRbyS(UID(u),"time",r)
+        call SRbyS(UID(u),"ang",ang)
+        call SSbyS(UID(u),"ability", "reaper")
+      endif
+      call PauseTimer(t)
+      call DestroyTimer(t)
+      call FMS(TID(t))
+    endif
+    set t=null
+    set u=null
+endfunction
+
+function Trig_TheReaperRechargingActions takes nothing returns nothing
+    local unit u=GetTriggerUnit()
+    local timer t=CreateTimer()
+    local real ang=Atan2(GRbyS(UID(u),"tlocy")-GetUnitY(u),GRbyS(UID(u),"tlocx")-GetUnitX(u))
+    call IssueImmediateOrder( u, "channel" )
+    call UnitAddAbility(u,'A01Z')
+    call SUbyS(TID(t),"u",u)
+    call SRbyS(TID(t),"r",0)
+    call SRbyS(TID(t),"ang",ang)
+    call TimerStart(t,0.1,true,function TheReaperTimer)
+    set u=null
+    set t=null
+endfunction
+
+//===========================================================================
+function InitTrig_TheReaperRecharging takes nothing returns nothing
+    set gg_trg_TheReaperRecharging = CreateTrigger()
+#ifdef DEBUG
+    call YDWESaveTriggerName(gg_trg_TheReaperRecharging, "TheReaperRecharging")
+#endif
+    call TriggerRegisterAnyUnitEventBJ( gg_trg_TheReaperRecharging, EVENT_PLAYER_UNIT_SPELL_FINISH )
+    call TriggerAddCondition(gg_trg_TheReaperRecharging, Condition(function Trig_TheReaperRechargingConditions))
+    call TriggerAddAction(gg_trg_TheReaperRecharging, function Trig_TheReaperRechargingActions)
+endfunction
