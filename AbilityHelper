@@ -7,6 +7,7 @@ globals
     private location uloc = Location(0,0)
 endglobals
 
+
 function GroupFilter takes group g, unit u, boolean alive, boolean enemy, boolean edi returns nothing
     local unit v
     local group gd=CreateGroup()
@@ -86,7 +87,7 @@ function USGE takes unit speller,group tgt,integer abicode,integer lvl,string s 
         exitwhen w==null
         call GroupRemoveUnit(tgt,w)
         if IsUnitEnemy(w,GetOwningPlayer(speller))==true then
-           set u=CreateUnit(GetOwningPlayer(speller),'h000',GetUnitX(w),GetUnitY(w),0)
+           set u=CreateUnit(GetOwningPlayer(speller),caster,GetUnitX(w),GetUnitY(w),0)
            call ShowUnitHide(u)
            call UnitAddAbility(u,abicode)
            call SetUnitAbilityLevel(u,abicode,lvl)
@@ -99,7 +100,7 @@ endfunction
 
 //UnitSpellUnit
 function USU takes unit speller, unit tgt, integer abicode, integer lvl,string s returns nothing
-    local unit u=CreateUnit(GetOwningPlayer(speller),'h000',GetUnitX(tgt),GetUnitY(tgt),0)
+    local unit u=CreateUnit(GetOwningPlayer(speller),caster,GetUnitX(tgt),GetUnitY(tgt),0)
     call UnitApplyTimedLife(u, 'BHwe', 1)
     call ShowUnitHide(u)
     call UnitAddAbility(u,abicode)
@@ -109,7 +110,7 @@ function USU takes unit speller, unit tgt, integer abicode, integer lvl,string s
 endfunction
 
 function USUID takes unit speller, unit tgt, integer abicode, integer lvl,integer id returns nothing
-    local unit u=CreateUnit(GetOwningPlayer(speller),'h000',GetUnitX(tgt),GetUnitY(tgt),YDWEAngleBetweenUnits(speller,tgt))
+    local unit u=CreateUnit(GetOwningPlayer(speller),caster,GetUnitX(tgt),GetUnitY(tgt),YDWEAngleBetweenUnits(speller,tgt))
     call UnitApplyTimedLife(u, 'BHwe', 3)
     call ShowUnitHide(u)
     call UnitAddAbility(u,abicode)
@@ -128,9 +129,42 @@ function UAMP takes unit u, real amt returns nothing
     call SetUnitState(u,UNIT_STATE_MANA,GetUnitState(u,UNIT_STATE_MANA)+amt)
 endfunction
 
+//浮空效果
+function LauncherLoop takes nothing returns nothing
+    local timer t=GetExpiredTimer()
+    local unit u=GUbyS(TID(t),"u")
+    local real v0=GRbyS(TID(t),"v0")
+    local real halfdur=GRbyS(TID(t),"halfdur")
+    local real vdelta=v0/halfdur
+    local real v=GRbyS(TID(t),"v")
+    call SetUnitFlyHeight(u,GetUnitFlyHeight(u)+v/100,0)
+    call IssueImmediateOrder(u,"stop")
+    set v=v-vdelta*0.01
+    call SRbyS(TID(t),"v",v)
+    if v<=-v0 then
+      call PauseTimer(t)
+      call FMS(TID(t))
+      call DestroyTimer(t)
+    endif
+    set t=null
+    set u=null
+endfunction
+
+function Launcher takes unit u, real v0, real duration returns nothing
+    local timer t=CreateTimer()
+    local real halfdur=duration/2
+    call YDWEFlyEnable(u)
+    call SUbyS(TID(t),"u",u)
+    call SRbyS(TID(t),"halfdur",halfdur)
+    call SRbyS(TID(t),"v0",v0)
+    call SRbyS(TID(t),"v",v0)
+    call TimerStart(t,0.01,true,function LauncherLoop)
+    set t=null
+endfunction
+
 //========================================================================================================
 function init takes nothing returns nothing
-    set caster='h000'
+    set caster='h001'
 endfunction
 
 endlibrary
