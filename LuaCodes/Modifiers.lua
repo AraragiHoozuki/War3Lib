@@ -1,4 +1,4 @@
-ModifierData = {
+ModifierMaster = {
     MODIFIER_TEST = {
         id = 'MODIFIER_TEST',
         duration = 6,

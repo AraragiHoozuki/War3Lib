@@ -89,7 +89,7 @@ function Modifier:new(o, owner, mid)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
-    local data = ModifierData[mid]
+    local data = ModifierMaster[mid]
     o.data = data
     o.owner = owner
     o.interval = data.interval

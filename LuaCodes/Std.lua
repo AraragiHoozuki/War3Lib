@@ -29,7 +29,17 @@ function PrintTable(t)
     end
     print('--------------end----------------')
 end
+-- Angle -----------------------------------------------------
+Degree = math.pi / 180
+AngleDiff = function(r1, r2)
+    local d = r2 - r1
+    if (d > math.pi) then d = d - 2 * math.pi
+    elseif (d < - math.pi) then d = d + 2 * math.pi
+    end
+    return d
+end
 
+-- Vector2 ----------------------------------------------------
 Vector2 = {x=0, y=0}
 
 function Vector2:new(o, x, y)
@@ -39,4 +49,8 @@ function Vector2:new(o, x, y)
     o.x = x
     o.y = y
     return o
+end
+
+function Vector2:Distance(x, y)
+    return math.sqrt((x - self.x)^2 + (y - self.y)^2)
 end
