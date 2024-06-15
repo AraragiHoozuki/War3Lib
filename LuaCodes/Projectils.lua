@@ -52,3 +52,7 @@ ProjectilMaster.UnitAttackProjectils = {
         Hit = nil
     }
 }
+
+ProjectilMaster.AbilityProjectils = {
+    
+}

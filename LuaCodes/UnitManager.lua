@@ -95,7 +95,14 @@ end
 
 -----------------------------------------------
 -- Modifiers
-Modifier = {owner = nil}
+Modifier = {}
+Modifier.REAPPLY_MODE_NO = 0
+Modifier.REAPPLY_MODE_STACK = 1
+Modifier.REAPPLY_MODE_REFRESH = 2
+Modifier.REAPPLY_MODE_STACK_AND_REFRESH = 3
+Modifier.REAPPLY_MODE_COEXIST = 4
+Modifier.REAPPLY_MODE_REMOVE_OLD = 5
+
 
 
 function Modifier:new(o, lu_owner, mid, lu_applier, bindAbility)

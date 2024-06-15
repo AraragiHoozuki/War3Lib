@@ -8,7 +8,7 @@ Damage.DAMAGE_TYPE_DOT = 2 -- damage over time
 
 Damage.ELEMENT_TYPE_NONE = 0
 
-Damage.ApplyDirectDamage = function( targetUnit, amount)
+Damage.ApplyDirectDamage = function(targetUnit, amount)
     local life = GetWidgetLife(targetUnit)
     SetWidgetLife(targetUnit, life - amount)
 end
