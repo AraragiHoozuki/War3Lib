@@ -1,7 +1,9 @@
 AbilitySystem.StarPick = function()
     local lu = LuaUnit.Get(GetTriggerUnit())
+    local x = GetUnitX(lu.unit)
+    local y = GetUnitY(lu.unit)
     for k,prjt in pairs(ProjectilMgr.Projectils) do
-        local dis = prjt.position:Distance(GetUnitX(lu.unit), GetUnitY(lu.unit))
+        local dis = prjt.position:Distance(x, y)
         if (dis <= 150) then
             prjt.target_unit = prjt.emitter.unit
             prjt.emitter = lu
