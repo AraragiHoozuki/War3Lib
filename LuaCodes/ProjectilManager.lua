@@ -1,6 +1,6 @@
 Projectil = {}
 
-function Projectil:new(o, lu_emitter, x, y, facing, settings, target_unit, target_position)
+function Projectil:new(o, lu_emitter, x, y, facing, settings, target_unit, target_position, damageSettings)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
@@ -18,6 +18,11 @@ function Projectil:new(o, lu_emitter, x, y, facing, settings, target_unit, targe
     o.max_flying_distance = settings.max_flying_distance or o.velocity * 5
     o.model = settings.model or 'h000'
     o.emitter = lu_emitter
+    o.damageSettings = {}
+    o.damageSettings.amount = damageSettings.amount or 0
+    o.damageSettings.atktype = damageSettings.atktype or Damage.ATTACK_TYPE_NORMAL
+    o.damageSettings.dmgtype = damageSettings.dmgtype or Damage.DAMAGE_TYPE_NORMAL
+    o.damageSettings.eletype = damageSettings.eletype or Damage.ELEMENT_TYPE_NONE
 
     --properties
     o.position = Vector2:new(nil, x, y)
@@ -35,7 +40,7 @@ function Projectil:new(o, lu_emitter, x, y, facing, settings, target_unit, targe
 end
 
 function Projectil:Track()
-    if self.tracking_stopped then 
+    if self.tracking_stopped then
         BlzSetUnitFacingEx(self.bullet, self.angle / Degree)
         return
     end
@@ -98,7 +103,7 @@ function Projectil:CheckHit()
             if self.target_unit ~= nil then
                 local x = GetUnitX(self.target_unit)
                 local y = GetUnitY(self.target_unit)
-                local distance = (x-self.position.x)^2+(y-self.position.y)^2
+                local distance = (x-GetUnitX(self.bullet))^2+(y-GetUnitY(self.bullet))^2
                 if (distance < self.hit_range_2) then
                     self:OnHit(LuaUnit.Get(self.target_unit))
                     self.ended = true
@@ -127,8 +132,10 @@ function Projectil:CheckEnd()
     end
 end
 
-function Projectil:OnHit(lu)
-    self.settings.Hit(self, lu)
+function Projectil:OnHit(lu_victim)
+    local dmg = Damage:new(nil, self.emitter, lu_victim, self.damageSettings.amount, self.damageSettings.atktype, self.damageSettings.dmgtype, self.damageSettings.eletype)
+    dmg:Resolve()
+    if (self.settings.Hit ~= nil) then self.settings.Hit(self, lu_victim) end
 end
 
 function Projectil:OnMiss()
@@ -166,7 +173,7 @@ ProjectilMgr.CreateProjectil = function(lu_emitter, x, y, facing, settings)
     ProjectilMgr.Projectils[id] = prjt
 end
 
-ProjectilMgr.CreateAttackProjectil = function(lu_emitter, u_target)
+ProjectilMgr.CreateAttackProjectil = function(lu_emitter, u_target, damage_value)
     local settings = ProjectilMaster.UnitAttackProjectils[GetUnitTypeId(lu_emitter.unit)]
 
     local x = GetUnitX(lu_emitter.unit)
@@ -180,7 +187,8 @@ ProjectilMgr.CreateAttackProjectil = function(lu_emitter, u_target)
     local facing = math.atan(dy,dx)
     --if (facing < 0) then facing = facing + 2 * math.pi end
 
-    local prjt = Projectil:new(nil, lu_emitter, x, y, facing, settings, u_target, nil)
+    local damageSettings = {amount = damage_value}
+    local prjt = Projectil:new(nil, lu_emitter, x, y, facing, settings, u_target, nil, damageSettings)
     local id = ProjectilMgr.GetNextId()
     ProjectilMgr.Projectils[id] = prjt
 end

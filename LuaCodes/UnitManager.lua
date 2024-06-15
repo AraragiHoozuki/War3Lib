@@ -28,7 +28,7 @@ end
 UnitManager.Update = function()
     for k,v in pairs(UnitManager.LuaUnits) do
         v:Update()
-     end
+    end
 end
 
 ----------------------------------------------------------
@@ -58,9 +58,15 @@ function LuaUnit:Update()
     end
 end
 
-function LuaUnit:AcquireModifier(mid)
-    local mod = Modifier:new(nil, self, mid)
+function LuaUnit:AcquireModifier(mid, lu_applier, bindAbility)
+    local mod = Modifier:new(nil, self, mid, lu_applier, bindAbility)
     table.insert(self.modifiers, mod)
+    mod:OnAcquired()
+end
+
+function LuaUnit:ApplyModifier(mid, lu_target, bindAbility)
+    local mod = Modifier:new(nil, lu_target, mid, self, bindAbility)
+    table.insert(target.modifiers, mod)
     mod:OnAcquired()
 end
 
@@ -80,18 +86,27 @@ end
 function LuaUnit:RemoveModifierById()
 
 end
+
+function LuaUnit:OnBeforeDealDamage(damage)
+end
+function LuaUnit:OnBeforeDamage(damage)
+
+end
+
 -----------------------------------------------
 -- Modifiers
 Modifier = {owner = nil}
 
 
-function Modifier:new(o, owner, mid)
+function Modifier:new(o, lu_owner, mid, lu_applier, bindAbility)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
     local data = ModifierMaster[mid]
     o.data = data
-    o.owner = owner
+    o.ability = bindAbility or data.BindAbility or nil
+    o.applier = lu_applier or lu_owner
+    o.owner = lu_owner
     o.interval = data.interval
     o.duration = data.duration
     o.effects = {}
@@ -99,10 +114,30 @@ function Modifier:new(o, owner, mid)
     return o
 end
 
+function Modifier:GetLevel()
+    if (self.ability == nil) then
+        return 1
+    else
+        return GetUnitAbilityLevel(self.applier.unit, self.ability)
+    end
+end
+
+function Modifier:GetLevelValue(key)
+    local value = self.data.LevelValues;
+    if (value ~= nil) then value = value[key] end
+    if (value ~= nil) then value = value[self:GetLevel()] end
+    if (value ~= nil) then
+        return value
+    else
+        return 0
+    end
+end
+function Modifier:LV(key) return self:GetLevelValue(key) end
+
 function Modifier:Update()
     self.delta_time = self.delta_time + CoreTicker.Interval
     if (self.delta_time >= self.interval) then
-        self.data.Update(self)
+        if (self.data.Update ~= nil) then self.data.Update(self) end
         self.delta_time = self.delta_time - self.interval
     end
     if (self.duration ~= -1) then
@@ -123,6 +158,7 @@ function Modifier:OnAcquired()
         local eff = AddSpecialEffectTarget(v.model, self.owner.unit, v.attach_point)
         table.insert(self.effects, eff)
     end
+    if (self.data.Acquire ~= nil) then self.data.Acquire(self) end
 end
 
 function Modifier:OnRemoved()
@@ -131,4 +167,5 @@ function Modifier:OnRemoved()
         DestroyEffect(v)
     end
     self.effects = {}
+    if (self.data.Remove ~= nil) then self.data.Remove(self) end
 end

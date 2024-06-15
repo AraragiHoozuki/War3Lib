@@ -29,14 +29,38 @@ function PrintTable(t)
     end
     print('--------------end----------------')
 end
--- Angle -----------------------------------------------------
+function TableContain(table, element)
+    for _, value in pairs(table) do
+      if value == element then
+        return true
+      end
+    end
+    return false
+end
+-- Math -----------------------------------------------------
 Degree = math.pi / 180
 AngleDiff = function(r1, r2)
     local d = r2 - r1
+    --[[
+    while (d > math.pi) do
+        d = d - 2 * math.pi
+    end
+    while (d < -math.pi) do
+        d = d + 2 * math.pi
+    end
+    ]]--
     if (d > math.pi) then d = d - 2 * math.pi
     elseif (d < - math.pi) then d = d + 2 * math.pi
     end
     return d
+end
+-- DND x d y
+math.dice = function(x, y)
+    local result = 0
+    for i = 1, x do
+        result = result + math.random(y)
+    end
+    return result
 end
 
 -- Vector2 ----------------------------------------------------
