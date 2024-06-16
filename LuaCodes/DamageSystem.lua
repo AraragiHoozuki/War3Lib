@@ -1,6 +1,7 @@
 Damage = {}
-Damage.ATTACK_TYPE_NORMAL = 0
-Damage.ATTACK_TYPE_ = 1
+Damage.ATTACK_TYPE_NORMAL = 1 --普通攻击
+Damage.ATTACK_TYPE_PROJECTIL = 2
+Damage.ATTACK_TYPE_AOE = 4
 
 Damage.DAMAGE_TYPE_NORMAL = 0
 Damage.DAMAGE_TYPE_PURE = 1

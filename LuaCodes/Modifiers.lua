@@ -30,15 +30,15 @@ ModifierMaster = {
         Update = function(this)
             for k,prjt in pairs(ProjectilMgr.Projectils) do
                 local dis = prjt.position:Distance(GetUnitX(this.owner.unit), GetUnitY(this.owner.unit))
-                if this.MODIFIER_BULLET_TIME_AffectedBullets[prjt] == nil then
+                if this.MODIFIER_BULLET_TIME_AffectedBullets[prjt.uuid] == nil then
                     if dis < this:LV('EffectRange') then
                         local d = prjt.velocity * this:LV('VelocityDownPercent') / 100
-                        this.MODIFIER_BULLET_TIME_AffectedBullets[prjt] = d
+                        this.MODIFIER_BULLET_TIME_AffectedBullets[prjt.uuid] = d
                         prjt.velocity = prjt.velocity + d
                     end
                 elseif dis > this:LV('EffectRange') then
-                    prjt.velocity = prjt.velocity - this.MODIFIER_BULLET_TIME_AffectedBullets[prjt]
-                    this.MODIFIER_BULLET_TIME_AffectedBullets[prjt] = nil
+                    prjt.velocity = prjt.velocity - this.MODIFIER_BULLET_TIME_AffectedBullets[prjt.uuid]
+                    this.MODIFIER_BULLET_TIME_AffectedBullets[prjt.uuid] = nil
                 end
             end
         end,

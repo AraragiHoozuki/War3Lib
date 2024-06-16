@@ -54,6 +54,47 @@ AngleDiff = function(r1, r2)
     end
     return d
 end
+
+
+GUID = {
+    _chars = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'},
+    _HexDigit = function() return GUID._chars[GetRandomInt(1,16)] end,
+    generate = function()
+        return GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        '-'..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        '-'..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        '-'..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        '-'..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()..
+        GUID._HexDigit()
+    end
+}
+
 -- DND x d y
 math.dice = function(x, y)
     local result = 0
@@ -74,7 +115,20 @@ function Vector2:new(o, x, y)
     o.y = y
     return o
 end
-
 function Vector2:Distance(x, y)
+    return math.sqrt((x - self.x)^2 + (y - self.y)^2)
+end
+
+Vector3 = {x=0, y=0, z=0}
+function Vector3:new(o, x, y, z)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    o.x = x
+    o.y = y
+    o.z = z or 0
+    return o
+end
+function Vector3:Distance(x, y)
     return math.sqrt((x - self.x)^2 + (y - self.y)^2)
 end
