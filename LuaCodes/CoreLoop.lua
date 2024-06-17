@@ -10,4 +10,9 @@ CoreTicker.Tick = function()
     CoreTicker._stamp = CoreTicker._stamp + 1
     UnitManager.Update()
     ProjectilMgr.Update()
+    MapObjectMgr.Update()
 end
+
+GameConstants = {
+    Gravity = 600
+}
