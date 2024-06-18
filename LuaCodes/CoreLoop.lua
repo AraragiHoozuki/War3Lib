@@ -13,6 +13,10 @@ CoreTicker.Tick = function()
     MapObjectMgr.Update()
 end
 
+CoreTicker.Delay = function(action)
+
+end
+
 GameConstants = {
     Gravity = 600
 }

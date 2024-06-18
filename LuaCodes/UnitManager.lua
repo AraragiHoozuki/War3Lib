@@ -50,8 +50,17 @@ function LuaUnit:new(o, unit)
     o.unit = unit
     o.modifiers = {}
     o.hitHistory = {}
+    o.atk_spd_modify = 0
+    o.default_atk_interval = BlzGetUnitWeaponRealField(o.unit, UNIT_WEAPON_RF_ATTACK_BASE_COOLDOWN, 0)
     o.greeting = 'My name is '..GetUnitName(unit)
     return o
+end
+
+function LuaUnit:AttackSpeedModify(value_pct)
+    self.atk_spd_modify = self.atk_spd_modify + value_pct
+    local value = self.atk_spd_modify/100
+    local interval_new = self.default_atk_interval/(1+value)
+    BlzSetUnitWeaponRealField(self.unit, UNIT_WEAPON_RF_ATTACK_BASE_COOLDOWN, 0, interval_new)
 end
 
 function LuaUnit:Update()
@@ -144,8 +153,18 @@ end
 
 function LuaUnit:OnBeforeDealDamage(damage)
 end
-function LuaUnit:OnBeforeDamage(damage)
+function LuaUnit:OnBeforeTakeDamage(damage)
+    for _,m in pairs(self.modifiers) do
+        m:OnBeforeTakeDamage(damage)
+    end
+end
 
+function LuaUnit:OnDealDamage(damage)
+end
+function LuaUnit:OnTakeDamage(damage)
+    for _,m in pairs(self.modifiers) do
+        m:OnTakeDamage(damage)
+    end
 end
 
 -----------------------------------------------
@@ -184,6 +203,7 @@ function Modifier:new(o, lu_owner, settings, lu_applier, bindAbility)
     o.reapply_mode = settings.reapply_mode or Modifier.REAPPLY_MODE_NO
     o.stack = 1
     o.max_stack = settings.max_stack or 1
+    o.bonitas = settings.bonitas or 0 --大于0表示正面效果，小于0表示负面效果 
     o.effects = {}
     o.delta_time = 0
     return o
@@ -210,7 +230,7 @@ end
 function Modifier:LV(key) return self:GetLevelValue(key) end
 
 function Modifier:Refresh(refresh)
-
+    self.duration = self.settings.duration
 end
 
 function Modifier:AddStack(value, refresh)
@@ -267,4 +287,12 @@ function Modifier:OnRemoved()
     end
     self.effects = {}
     if (self.settings.Remove ~= nil) then self.settings.Remove(self) end
+end
+
+function Modifier:OnBeforeTakeDamage(damage)
+    if (self.settings.BeforeTakeDamage ~= nil) then self.settings.BeforeTakeDamage(self, damage) end
+end
+
+function Modifier:OnTakeDamage(damage)
+    if (self.settings.TakeDamage ~= nil) then self.settings.TakeDamage(self, damage) end
 end

@@ -284,6 +284,10 @@ end
 function Projectil:OnMiss()
 end
 
+function Projectil:End()
+    self.ended = true
+end
+
 function Projectil:Remove()
     DestroyGroup(self.hit_checker_group)
     DestroyEffect(self.bullet)
@@ -309,7 +313,7 @@ ProjectilMgr.CreateAttackProjectil = function(lu_emitter, u_target, damage_value
     local facing = math.atan(dy,dx)
     --if (facing < 0) then facing = facing + 2 * math.pi end
 
-    local damageSettings = {amount = damage_value}
+    local damageSettings = {amount = damage_value, atktype = Damage.ATTACK_TYPE_PROJECTIL}
     local prjt = Projectil:new(nil, lu_emitter, x, y, z, facing, settings, u_target, nil, damageSettings)
     --local id = ProjectilMgr.GetNextId()
     local id = prjt.uuid

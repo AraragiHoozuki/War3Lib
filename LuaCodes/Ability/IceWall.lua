@@ -26,6 +26,7 @@ AbilitySystem.ICE_WALL.Cast = function()
             for _,prjt in pairs(ProjectilMgr.Projectils) do
                 if (this.position:Distance(prjt.position.x, prjt.position.y) < AbilitySystem.ICE_WALL.IceBlockSize and
                     prjt.position.z - this.position.z < 140) then
+                    prjt:OnHit()
                     prjt.ended = true
                 end
             end
