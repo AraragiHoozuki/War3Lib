@@ -132,3 +132,6 @@ end
 function Vector3:Distance(x, y)
     return math.sqrt((x - self.x)^2 + (y - self.y)^2)
 end
+function Vector3:Distance3D(x, y, z)
+    return math.sqrt((x - self.x)^2 + (y - self.y)^2 + (z - self.z)^2)
+end

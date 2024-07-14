@@ -13,8 +13,9 @@ AbilitySystem.ICE_WALL.Cast = function()
     local alpha = math.atan(y-y0, x-x0)
     local dx = AbilitySystem.ICE_WALL.IceBlockSize * Cos(math.pi/2 - alpha)
     local dy = - AbilitySystem.ICE_WALL.IceBlockSize * Sin(math.pi/2 - alpha)
-    for i = -9, 9 do
-        local ice = MapObjectMgr.Create(lu_caster, Vector3:new(nil, x+i*dx,y+i*dy,0), 'Abilities\\Spells\\Undead\\FreezingBreath\\FreezingBreathTargetArt.mdl', 15, 
+    local half_num = 5 + lv
+    for i = -half_num, half_num do
+        local ice = MapObjectMgr.Create(lu_caster, Vector3:new(nil, x+i*dx,y+i*dy,0), 'Abilities\\Spells\\Undead\\FreezingBreath\\FreezingBreathTargetArt.mdl', 6 + lv*2, 
             {function(this)
                 SetTerrainPathable(this.position.x, this.position.y, PATHING_TYPE_WALKABILITY, false)
             end}

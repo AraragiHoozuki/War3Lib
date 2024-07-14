@@ -40,13 +40,27 @@ ProjectilMaster.UnitAttackProjectils = {
         hit_cooldown = 1, --同一单位命中间隔（仅对穿透弹道生效，防止同一个单位一直被判定命中）
         track_type = Projectil.TRACK_TYPE_UNIT, --追踪类型：无/追踪目标单位/追踪目标点
         trackZ = true, --是否Z轴追踪（根据目标高度调整子弹竖直方向速度）
-        tracking_angle = 60 * Degree, --最大追踪角度角度（水平），当目标不在子弹前方该角度的扇形区域时，丢失追踪效果
-        turning_speed = 60 * Degree, --最大转向速度（弧度/秒）
+        tracking_angle = 300 * Degree, --最大追踪角度角度（水平），当目标不在子弹前方该角度的扇形区域时，丢失追踪效果
+        turning_speed = 200 * Degree, --最大转向速度（弧度/秒）
         max_flying_distance = 1500, --最大飞行距离
         offsetX = 11, --发射点偏移
         offsetY = 62,
         offsetZ = 71,
-        Hit = nil --命中时额外调用函数
+        Hit = nil, --命中时额外调用函数
+        CustomTrack = function(this)
+            if (this.flying_distance < 60) then
+                this:TrackXY()
+            elseif (this.position.z - 300 < Projectil.GetUnitHitZ(this.target_unit)) and this.ascend_finished ~= true then
+                this.velocity = 0
+                this.velocityZ = 900
+            else
+                this.ascend_finished = true
+                this.velocity = this.settings.velocity
+                this.velocityZ = 0
+                this:TrackXY()
+                this:TrackZ()
+            end
+        end
     },
     -- 女猎手 
     [FourCC('esen')] = {
@@ -94,6 +108,29 @@ ProjectilMaster.UnitAttackProjectils = {
         offsetX = 10,
         offsetY = 105,
         offsetZ = -18,
+        Hit = nil
+    },
+    [FourCC('H005')] = {
+        model = 'Abilities\\Weapons\\MoonPriestessMissile\\MoonPriestessMissile.mdl',
+        velocity = 1400,
+        velocityZ = 0,
+        velocityZMax = 999999,
+        no_gravity = false,
+        hit_range = 50,
+        hit_rangeZ = 60,
+        hit_terrain = true,
+        hit_other = true,
+        hit_ally = true,
+        hit_piercing = false,
+        hit_cooldown = 1,
+        track_type = Projectil.TRACK_TYPE_UNIT,
+        trackZ = false,
+        tracking_angle = 90 * Degree,
+        turning_speed = 90 * Degree,
+        max_flying_distance = 4000,
+        offsetX = 0,
+        offsetY = 0,
+        offsetZ = 60,
         Hit = nil
     },
 }

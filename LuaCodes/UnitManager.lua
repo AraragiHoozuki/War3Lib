@@ -1,5 +1,6 @@
 UnitManager = {}
-UnitManager.LuaUnits = {};
+UnitManager.DummyCaster = FourCC('h003')
+UnitManager.LuaUnits = {}
 --[[
 UnitManager.CreateUnit = function()
     local unit = CreateUnit()
@@ -29,6 +30,15 @@ UnitManager.Update = function()
     for k,v in pairs(UnitManager.LuaUnits) do
         v:Update()
     end
+end
+
+UnitManager.DummySpellTarget = function(speller, target, abiId, level, order_string)
+    local dummy = CreateUnit(GetOwningPlayer(speller), UnitManager.DummyCaster, GetUnitX(speller), GetUnitY(speller), 0)
+    UnitApplyTimedLife(dummy, FourCC('BTLF'), 1)
+    ShowUnit(dummy, false)
+    UnitAddAbility(dummy, abiId)
+    SetUnitAbilityLevel(dummy, abiId, level)
+    IssueTargetOrder(dummy, order_string, target)
 end
 
 ----------------------------------------------------------
@@ -103,6 +113,14 @@ function LuaUnit:GetAffectedModifier(mid)
     end
     return nil
 end
+function LuaUnit:GetAffectedModifierIndex(mid)
+    for i,v in ipairs(self.modifiers) do
+        if v.id == mid then
+            return i
+        end
+    end
+    return nil
+end
 
 function LuaUnit:CheckModifierReapply(m)
     local mod = self:GetAffectedModifier(m.id)
@@ -137,13 +155,17 @@ function LuaUnit:RemoveModifier(mod)
     local index = IndexOf(self.modifiers, mod)
     self:RemoveModifierByIndex(index)
 end
+function LuaUnit:RemoveModifierById(mid)
+    local index = self:GetAffectedModifierIndex(mid)
+    self:RemoveModifierByIndex(index)
+end
 function LuaUnit:RemoveModifierByIndex(index)
-    local mod = table.remove(self.modifiers, index)
-    mod:OnRemoved()
+    if index ~= nil then
+        local mod = table.remove(self.modifiers, index)
+        mod:OnRemoved()
+    end
 end
-function LuaUnit:RemoveModifierById()
 
-end
 
 function LuaUnit:OnDeath()
     for _,m in pairs(self.modifiers) do
@@ -152,6 +174,9 @@ function LuaUnit:OnDeath()
 end
 
 function LuaUnit:OnBeforeDealDamage(damage)
+    for _,m in pairs(self.modifiers) do
+        m:OnBeforeDealDamage(damage)
+    end
 end
 function LuaUnit:OnBeforeTakeDamage(damage)
     for _,m in pairs(self.modifiers) do
@@ -160,6 +185,9 @@ function LuaUnit:OnBeforeTakeDamage(damage)
 end
 
 function LuaUnit:OnDealDamage(damage)
+    for _,m in pairs(self.modifiers) do
+        m:OnDealDamage(damage)
+    end
 end
 function LuaUnit:OnTakeDamage(damage)
     for _,m in pairs(self.modifiers) do
@@ -201,11 +229,18 @@ function Modifier:new(o, lu_owner, settings, lu_applier, bindAbility)
     o.remove_on_death = settings.remove_on_death or true
     o.valid_when_death = settings.valid_when_death or false
     o.reapply_mode = settings.reapply_mode or Modifier.REAPPLY_MODE_NO
-    o.stack = 1
+    o.stack = settings.stack or 1
     o.max_stack = settings.max_stack or 1
     o.bonitas = settings.bonitas or 0 --大于0表示正面效果，小于0表示负面效果 
     o.effects = {}
+    o.effects_scale = 1
     o.delta_time = 0
+    o.tags = {}
+    if settings.tags then 
+        for _,tag in ipairs(settings.tags) do
+            table.insert(o.tags, tag)
+        end
+    end
     return o
 end
 
@@ -247,17 +282,23 @@ end
 
 function Modifier:Update()
     self.delta_time = self.delta_time + CoreTicker.Interval
-    if (self.delta_time >= self.interval) then
-        if (self.valid_when_death == true or IsUnitAliveBJ(self.owner.unit)) and (self.settings.Update ~= nil) then
-            self.settings.Update(self) 
-        end
-        self.delta_time = self.delta_time - self.interval
-    end
     if (self.duration ~= -1) then
         self.duration = self.duration - CoreTicker.Interval
         if (self.duration < 0) then
             self:Remove()
         end
+    end
+    if (self.stack < 1) then
+        self:Remove()
+    end
+    if (self.delta_time >= self.interval) then
+        if (self.valid_when_death == true or IsUnitAliveBJ(self.owner.unit)) and (self.settings.Update ~= nil) then
+            self.settings.Update(self) 
+        end
+        for _,efx in pairs(self.effects) do
+            BlzSetSpecialEffectMatrixScale(efx, self.effects_scale,self.effects_scale,self.effects_scale)
+        end
+        self.delta_time = self.delta_time - self.interval
     end
 end
 
@@ -292,7 +333,13 @@ end
 function Modifier:OnBeforeTakeDamage(damage)
     if (self.settings.BeforeTakeDamage ~= nil) then self.settings.BeforeTakeDamage(self, damage) end
 end
+function Modifier:OnBeforeDealDamage(damage)
+    if (self.settings.BeforeDealDamage ~= nil) then self.settings.BeforeDealDamage(self, damage) end
+end
 
 function Modifier:OnTakeDamage(damage)
     if (self.settings.TakeDamage ~= nil) then self.settings.TakeDamage(self, damage) end
+end
+function Modifier:OnDealDamage(damage)
+    if (self.settings.DealDamage ~= nil) then self.settings.DealDamage(self, damage) end
 end

@@ -58,8 +58,9 @@ function Projectil:new(o, lu_emitter, x, y, z, facing, settings, target_unit, ta
     --set Z
     MoveLocation(Projectil.tempLoc, o.position.x, o.position.y)
     o.position.z = z + GetLocationZ(Projectil.tempLoc) + GetUnitFlyHeight(o.emitter.unit)
+    BlzSetSpecialEffectZ(o.bullet, o.position.z)
     o:InitVelocityZ()
-    
+    ProjectilMgr.Projectils[o.uuid] = o
     return o
 end
 
@@ -203,8 +204,12 @@ end
 function Projectil:Update()
     if (self.ended == true) then return end
     self.flying_time = self.flying_time + CoreTicker.Interval
-    self:TrackXY()
-    self:TrackZ()
+    if (self.settings.CustomTrack~=nil) then
+        self.settings.CustomTrack(self)
+    else
+        self:TrackXY()
+        self:TrackZ()
+    end
     self:Displace()
     self:UpdateVelocity()
     self:CheckHit()
@@ -315,9 +320,6 @@ ProjectilMgr.CreateAttackProjectil = function(lu_emitter, u_target, damage_value
 
     local damageSettings = {amount = damage_value, atktype = Damage.ATTACK_TYPE_PROJECTIL}
     local prjt = Projectil:new(nil, lu_emitter, x, y, z, facing, settings, u_target, nil, damageSettings)
-    --local id = ProjectilMgr.GetNextId()
-    local id = prjt.uuid
-    ProjectilMgr.Projectils[id] = prjt
 end
 
 ProjectilMgr.CreateProjectilBySettings = function(settings, lu_emitter, u_target, vec_tpos, damageSettings, level)
@@ -341,7 +343,6 @@ ProjectilMgr.CreateProjectilBySettings = function(settings, lu_emitter, u_target
     local z = settings.offsetZ or 0
 
     local prjt = Projectil:new(nil, lu_emitter, x, y, z, angle, settings, u_target, vec_tpos, damageSettings, level)
-    ProjectilMgr.Projectils[prjt.uuid] = prjt
 end
 
 ProjectilMgr.CreateProjectilById = function(pid, lu_emitter, u_target, vec_tpos, damageSettings, level)
